@@ -23,29 +23,31 @@ export function BaseNavbar({
   return (
     <nav
       className={cn(
-        "sticky top-0 z-50 w-full border-b border-gray-200 bg-white/80 backdrop-blur-md transition-all dark:border-gray-800 dark:bg-zinc-950/80",
+        "sticky top-0 z-50 w-full border-b border-border/40 bg-background/80 backdrop-blur-md transition-all",
         className
       )}
     >
-      <div className="flex h-16 items-center justify-between px-6">
-        {/* Left Section */}
-        <div className="flex items-center gap-4 min-w-0">{left}</div>
+      <div className="mx-auto flex h-16 max-w-7xl items-center justify-between px-4 sm:px-6">
+        {/* Left Section: Brand & Navigation */}
+        <div className="flex items-center gap-4">{left}</div>
 
-        {/* Center Section */}
-        <div className="hidden md:flex flex-1 justify-center px-6 max-w-xl">
+        {/* Center Section: Search (Hidden on mobile) */}
+        <div className="hidden lg:flex flex-1 justify-center px-8 max-w-2xl">
           {center}
         </div>
 
-        {/* Right Section: Actions + User Logic */}
-        <div className="flex items-center gap-3 justify-end min-w-0">
-          {/* 1. Contextual Actions (Write/Bell OR Save/Publish) */}
-          {actions}
+        {/* Right Section: Actions & Profile */}
+        <div className="flex items-center gap-4">
+          <div className="flex items-center gap-2">{actions}</div>
 
-          {/* 2. Standardized User Logic */}
           {user ? (
             <UserNav user={user} />
           ) : (
-            <Button asChild className="rounded-full" size="sm">
+            <Button
+              asChild
+              className="rounded-full bg-foreground text-background hover:bg-foreground/90 px-6 text-[10px] font-black uppercase tracking-widest shadow-lg shadow-black/5"
+              size="sm"
+            >
               <Link href="/login">Login</Link>
             </Button>
           )}

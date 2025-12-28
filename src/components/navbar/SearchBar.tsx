@@ -1,8 +1,8 @@
 "use client";
 
-import { Filter, Search } from "lucide-react";
+import { Search } from "lucide-react";
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
-import { Suspense, useState } from "react";
+import { useState } from "react";
 import { useDebouncedCallback } from "use-debounce";
 
 // Shadcn UI Imports
@@ -30,7 +30,7 @@ const CATEGORIES = [
   "CODING",
 ];
 
-function SearchInput() {
+export function SearchInput() {
   const searchParams = useSearchParams();
   const pathname = usePathname();
   const { replace } = useRouter();
@@ -80,69 +80,59 @@ function SearchInput() {
   const currentCategory = searchParams.get("category") || "ALL";
 
   return (
-    // Main Container: One border, rounded corners, unified look
-    <div className="flex w-full max-w-2xl items-center rounded-lg border bg-background p-0.5 focus-within:ring-2 focus-within:ring-ring focus-within:ring-offset-2">
-      {/* 1. Category Dropdown */}
+    <div className="flex w-full items-center rounded-full border-2 border-border/40 bg-gray-50/50 p-1 transition-all focus-within:border-primary/40 focus-within:bg-background focus-within:ring-4 focus-within:ring-primary/5">
+      {/* Category Dropdown */}
       <Select value={currentCategory} onValueChange={handleCategoryChange}>
-        <SelectTrigger className="h-10 rounded-r-none border-0 bg-transparent px-3 focus:ring-0 focus:ring-offset-0">
-          <Filter className="mr-2 h-4 w-4 opacity-50" />
-          <SelectValue placeholder="All Categories" />
+        <SelectTrigger className="h-9 rounded-full border-0 bg-transparent px-4 text-[10px] font-black uppercase tracking-widest focus:ring-0">
+          <SelectValue placeholder="Topics" />
         </SelectTrigger>
-        <SelectContent>
-          <SelectItem value="ALL">All Categories</SelectItem>
+        <SelectContent className="rounded-[1.5rem]">
+          <SelectItem value="ALL">All Topics</SelectItem>
           {CATEGORIES.map((cat) => (
-            <SelectItem key={cat} value={cat}>
-              {cat.charAt(0) + cat.slice(1).toLowerCase()}
+            <SelectItem
+              key={cat}
+              value={cat}
+              className="text-[10px] font-bold uppercase tracking-widest"
+            >
+              {cat}
             </SelectItem>
           ))}
         </SelectContent>
       </Select>
 
-      {/* Divider */}
-      <div className="h-6 w-[1px] bg-border" />
+      <div className="h-4 w-px bg-border/60 mx-1" />
 
-      {/* 2. Scope Dropdown (Title, Author, etc.) */}
+      {/* Scope Dropdown */}
       <Select value={scope} onValueChange={handleScopeChange}>
-        <SelectTrigger className="h-10 w-fit rounded-none border-0 bg-transparent px-3 focus:ring-0 focus:ring-offset-0 text-muted-foreground hover:text-foreground">
+        <SelectTrigger className="h-9 w-fit rounded-full border-0 bg-transparent px-4 text-[10px] font-black uppercase tracking-widest text-muted-foreground focus:ring-0">
           <SelectValue />
         </SelectTrigger>
-        <SelectContent>
+        <SelectContent className="rounded-[1.5rem]">
           {SEARCH_SCOPES.map((s) => (
-            <SelectItem key={s.value} value={s.value}>
+            <SelectItem
+              key={s.value}
+              value={s.value}
+              className="text-[10px] font-bold uppercase tracking-widest"
+            >
               {s.label}
             </SelectItem>
           ))}
         </SelectContent>
       </Select>
 
-      {/* Divider */}
-      <div className="h-6 w-[1px] bg-border" />
+      <div className="h-4 w-px bg-border/60 mx-1" />
 
-      {/* 3. Search Input & Icon */}
-      <div className="flex flex-1 items-center px-3">
-        <Search className="mr-2 h-4 w-4 shrink-0 opacity-50" />
+      {/* Input Section */}
+      <div className="flex flex-1 items-center px-4">
+        <Search className="mr-2 h-3.5 w-3.5 text-muted-foreground" />
         <Input
           id="shadcn-search-input"
-          type="text"
-          placeholder={`Search...`}
+          placeholder="Search stories..."
           defaultValue={searchParams.get(scope) ?? ""}
           onChange={(e) => executeSearch(e.target.value, scope)}
-          // Remove border and focus ring from the input itself
-          className="h-10 flex-1 border-0 bg-transparent p-0 focus-visible:ring-0 focus-visible:ring-offset-0 placeholder:text-muted-foreground"
+          className="h-9 border-0 bg-transparent p-0 text-sm font-medium focus-visible:ring-0 placeholder:text-muted-foreground/50"
         />
       </div>
-    </div>
-  );
-}
-
-export function SearchBar() {
-  return (
-    <div className="hidden md:flex flex-1 px-6">
-      <Suspense
-        fallback={<div className="h-10 w-full max-w-2xl bg-muted rounded-lg" />}
-      >
-        <SearchInput />
-      </Suspense>
     </div>
   );
 }

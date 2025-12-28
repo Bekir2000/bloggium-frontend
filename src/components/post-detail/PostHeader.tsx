@@ -8,38 +8,37 @@ interface PostHeaderProps {
 }
 
 export function PostHeader({ title, description, category }: PostHeaderProps) {
-  const formattedCategory = category
-    ? category.toString().charAt(0) + category.toString().slice(1).toLowerCase()
-    : "";
+  const formattedCategory = category ? category.toString().toUpperCase() : "";
 
   return (
-    <header className="mb-8">
-      {/* Category Badge */}
-      {category && (
-        <div className="mb-4">
-          <span className="text-sm font-bold uppercase tracking-wider text-blue-600 dark:text-blue-400">
-            {formattedCategory}
-          </span>
+    <header className="mb-12 space-y-8">
+      {/* Top Navigation Row */}
+      <div className="flex items-center justify-between">
+        <div className="flex-1">
+          <BackButton />
         </div>
-      )}
 
-      {/* FIX: 
-         1. Moved 'mb-4' from <h1> to this parent <div>.
-         2. Added 'gap-4' to create space between the arrow and title.
-         3. 'items-center' will now perfectly align the arrow with the text height.
-      */}
-      <div className="mb-4 flex items-center gap-4">
-        <BackButton />
-        <h1 className="font-serif text-3xl font-extrabold leading-tight tracking-tight text-gray-900 dark:text-gray-50 md:text-5xl">
-          {title}
-        </h1>
+        {category && (
+          <div className="flex-shrink-0">
+            <span className="text-[10px] font-black uppercase tracking-[0.2em] text-primary">
+              {formattedCategory}
+            </span>
+          </div>
+        )}
       </div>
 
-      {/* {description && (
-        <h2 className="text-xl font-medium text-gray-500 dark:text-gray-400 font-sans">
-          {description}
-        </h2>
-      )} */}
+      {/* Title Area */}
+      <div className="space-y-6">
+        <h1 className="font-sans text-4xl font-black leading-[1.1] tracking-tighter text-foreground md:text-6xl">
+          {title}
+        </h1>
+
+        {description && (
+          <h2 className="font-serif text-xl italic leading-relaxed text-muted-foreground">
+            {description}
+          </h2>
+        )}
+      </div>
     </header>
   );
 }

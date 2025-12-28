@@ -26,7 +26,6 @@ export function PostCard({
   const isBookmarked = postCard.meta?.isBookmarked ?? false;
   const postUrl = `/post-feed/${postCard.id}`;
 
-  // Helper for cleaner date formatting
   const formattedDate = postCard.createdAt
     ? new Date(postCard.createdAt).toLocaleDateString("en-US", {
         month: "short",
@@ -36,76 +35,90 @@ export function PostCard({
     : "";
 
   return (
-    <Card className="w-full shadow-md transition-shadow hover:shadow-lg">
-      <CardHeader>
-        {/* User Info */}
-        <div className="mb-3 flex flex-row items-center gap-2 text-sm">
-          <Avatar className="h-6 w-6">
+    <Card className="group w-full border-none bg-background shadow-[0_8px_30px_rgb(0,0,0,0.04)] transition-all duration-500 hover:shadow-[0_8px_30px_rgb(0,0,0,0.08)] rounded-[2rem] overflow-hidden">
+      <CardHeader className="p-6 sm:p-8">
+        {/* User Info / Byline */}
+        <div className="mb-6 flex flex-row items-center gap-3">
+          <Avatar className="h-8 w-8 ring-2 ring-background shadow-sm">
             <AvatarImage
               src={postCard.author?.imageUrl ?? undefined}
               alt={postCard.author?.firstName}
             />
-            <AvatarFallback className="text-[10px]">
+            <AvatarFallback className="bg-primary/5 text-primary text-[10px] font-bold">
               {postCard.author?.firstName?.[0] ?? "?"}
             </AvatarFallback>
           </Avatar>
-          <div className="text-xs font-medium text-gray-700">
-            {postCard.author?.firstName} {postCard.author?.lastName}
+          <div className="flex flex-col">
+            <span className="text-[10px] font-black uppercase tracking-[0.2em] text-foreground/80">
+              {postCard.author?.firstName} {postCard.author?.lastName}
+            </span>
+            <span className="text-[9px] font-medium text-muted-foreground uppercase tracking-widest">
+              Author
+            </span>
           </div>
         </div>
 
-        {/* Main Content Link */}
+        {/* Main Content Area */}
         <Link
           href={postUrl}
-          className="group flex flex-row items-start justify-between gap-4 cursor-pointer"
+          className="flex flex-col-reverse md:flex-row items-start justify-between gap-6 cursor-pointer"
         >
-          <div className="flex-1">
-            <CardTitle className="text-base font-bold leading-snug transition-colors group-hover:text-gray-700 sm:text-xl">
+          <div className="flex-1 space-y-3">
+            <CardTitle className="font-sans text-xl font-black leading-tight tracking-tighter transition-colors group-hover:text-primary sm:text-2xl lg:text-3xl">
               {postCard.title}
             </CardTitle>
-            <CardDescription className="mt-2 line-clamp-2 text-sm sm:text-base">
+            <CardDescription className="font-serif text-base leading-relaxed text-muted-foreground line-clamp-2 italic">
               {postCard.description}
             </CardDescription>
           </div>
 
-          <div className="h-[75px] w-[100px] shrink-0 sm:h-[120px] sm:w-[160px]">
-            {postCard.imageUrl && (
+          {postCard.imageUrl && (
+            <div className="relative aspect-[16/10] w-full md:w-[220px] shrink-0 overflow-hidden rounded-2xl border border-border/50 shadow-sm transition-transform duration-500 group-hover:scale-[1.02]">
               <Image
                 src={postCard.imageUrl}
                 alt={postCard.title ?? ""}
-                width={160}
-                height={120}
-                className="h-full w-full rounded-md object-cover"
+                fill
+                className="object-cover"
+                sizes="(max-width: 768px) 100vw, 220px"
               />
-            )}
-          </div>
+            </div>
+          )}
         </Link>
       </CardHeader>
 
-      {/* Footer / Metadata */}
-      <CardFooter className="mt-2 flex items-center justify-between text-sm text-gray-600">
-        <div className="flex items-center gap-4 sm:gap-6">
-          {/* Date View Improved */}
-          <span className="flex items-center gap-1 text-xs text-gray-500">
+      {/* Footer / Stats Bar */}
+      <CardFooter className="px-6 sm:px-8 pb-8 flex items-center justify-between">
+        <div className="flex items-center gap-5">
+          {/* Date */}
+          <div className="flex items-center gap-1.5 text-muted-foreground">
             <Calendar className="h-3.5 w-3.5" />
-            {formattedDate}
-          </span>
-          <span className="flex items-center gap-1 text-xs text-gray-500">
-            <ThumbsUp className="h-3.5 w-3.5" /> {postCard.meta?.likeCount || 0}
-          </span>
-          <span className="flex items-center gap-1 text-xs text-gray-500">
-            <MessageCircle className="h-3.5 w-3.5" />{" "}
-            {postCard.meta?.commentCount || 0}
-          </span>
+            <span className="text-[10px] font-bold uppercase tracking-widest">
+              {formattedDate}
+            </span>
+          </div>
+
+          {/* Engagement Stats */}
+          <div className="flex items-center gap-4 border-l border-border/50 pl-5">
+            <span className="flex items-center gap-1.5 text-[11px] font-bold text-muted-foreground transition-colors hover:text-primary">
+              <ThumbsUp className="h-3.5 w-3.5" />
+              {postCard.meta?.likeCount || 0}
+            </span>
+            <span className="flex items-center gap-1.5 text-[11px] font-bold text-muted-foreground transition-colors hover:text-primary">
+              <MessageCircle className="h-3.5 w-3.5" />
+              {postCard.meta?.commentCount || 0}
+            </span>
+          </div>
         </div>
 
-        {postCard.id ? (
-          <PostActions
-            postId={postCard.id}
-            currentUser={currentUser}
-            isBookmarked={isBookmarked}
-          />
-        ) : null}
+        {postCard.id && (
+          <div className="scale-90 opacity-80 transition-all hover:opacity-100 hover:scale-100">
+            <PostActions
+              postId={postCard.id}
+              currentUser={currentUser}
+              isBookmarked={isBookmarked}
+            />
+          </div>
+        )}
       </CardFooter>
     </Card>
   );

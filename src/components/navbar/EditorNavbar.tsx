@@ -4,11 +4,11 @@ import { UserResponse } from "@/api/generated/model";
 import { BackButton } from "@/components/ui/back-button";
 import { BrandLogo } from "@/components/ui/brand-logo";
 import { Button } from "@/components/ui/button";
-import { Loader2 } from "lucide-react";
+import { Loader2, Rocket } from "lucide-react";
 import { BaseNavbar } from "../navbar/BaseNavbar";
 
 interface EditorNavbarProps {
-  currentUser: UserResponse | null;
+  currentUser: UserResponse | undefined;
   isPending: boolean;
   isEditing: boolean;
   onSaveDraft: () => void;
@@ -24,29 +24,31 @@ export function EditorNavbar({
 }: EditorNavbarProps) {
   return (
     <BaseNavbar
-      user={currentUser} // ✅ Pass user here
+      user={currentUser}
       left={
         <div className="flex items-center gap-4">
           <BackButton />
-          <div className="flex items-center gap-2">
+          <div className="flex items-center gap-4">
             <BrandLogo />
-            <span className="hidden sm:block h-6 w-px bg-gray-200 dark:bg-gray-700 mx-2"></span>
-            <span className="text-sm text-gray-500 font-medium">
-              {isEditing ? "Editing Draft" : "New Story"}
-            </span>
+            <div className="flex flex-col">
+              <span className="text-[10px] font-black uppercase tracking-[0.2em] text-foreground">
+                {isEditing ? "Editing Revision" : "New Story"}
+              </span>
+              <span className="text-[9px] font-medium text-muted-foreground uppercase tracking-widest">
+                {isPending ? "Syncing..." : "Saved locally"}
+              </span>
+            </div>
           </div>
         </div>
       }
-      center={null}
-      // ✅ Only pass the specific buttons for the editor
       actions={
-        <>
+        <div className="flex items-center gap-3">
           <Button
             variant="ghost"
             size="sm"
             disabled={isPending}
             onClick={onSaveDraft}
-            className="text-gray-500 hover:text-black hidden sm:flex"
+            className="text-[10px] font-black uppercase tracking-widest hover:bg-accent rounded-full px-4"
           >
             Save Draft
           </Button>
@@ -55,12 +57,16 @@ export function EditorNavbar({
             size="sm"
             disabled={isPending}
             onClick={onPublish}
-            className="rounded-full bg-green-600 hover:bg-green-700 text-white px-6 font-medium mr-2"
+            className="rounded-full bg-green-600 hover:bg-green-700 text-white px-6 text-[10px] font-black uppercase tracking-widest shadow-lg shadow-green-500/20"
           >
-            {isPending && <Loader2 className="w-3 h-3 mr-2 animate-spin" />}
+            {isPending ? (
+              <Loader2 className="w-3 h-3 mr-2 animate-spin" />
+            ) : (
+              <Rocket className="w-3 h-3 mr-2" />
+            )}
             Publish
           </Button>
-        </>
+        </div>
       }
     />
   );

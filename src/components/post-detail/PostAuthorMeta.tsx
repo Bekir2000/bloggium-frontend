@@ -5,6 +5,7 @@ import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { format } from "date-fns";
 
 // Import your new component
+import clsx from "clsx";
 import { PostShareMenu } from "./PostShareMenu";
 
 interface PostAuthorMetaProps {
@@ -27,77 +28,54 @@ export function PostAuthorMeta({
   isLoading,
   isOwnPost,
   onToggleFollow,
-  postTitle,
   postId,
 }: PostAuthorMetaProps) {
   return (
-    <div className="mb-8 flex items-center justify-between">
-      {/* LEFT: Author Profile & Meta */}
-      <div className="flex items-center gap-3">
-        <Avatar className="h-10 w-10 cursor-pointer border border-border/50">
+    <div className="mb-10 flex items-center justify-between border-b pb-8 border-border/50">
+      <div className="flex items-center gap-4">
+        <Avatar className="h-12 w-12 border-2 border-background shadow-sm">
           <AvatarImage src={author?.imageUrl} alt={author?.firstName} />
-          <AvatarFallback className="text-xs bg-muted text-muted-foreground font-medium">
-            {author?.firstName?.[0]?.toUpperCase() || "?"}
+          <AvatarFallback className="font-bold bg-primary/5 text-primary">
+            {author?.firstName?.[0]}
           </AvatarFallback>
         </Avatar>
 
-        <div className="flex flex-col text-sm">
-          {/* Top Row: Name + Follow Button */}
-          <div className="flex items-center gap-2">
-            <span className="font-semibold text-foreground">
+        <div className="flex flex-col">
+          <div className="flex items-center gap-3">
+            <span className="text-xs font-black uppercase tracking-widest text-foreground">
               {author?.firstName} {author?.lastName}
             </span>
 
             {!isOwnPost && (
-              <>
-                <span className="text-muted-foreground">·</span>
-                <button
-                  type="button"
-                  onClick={onToggleFollow}
-                  disabled={isLoading}
-                  className={`font-medium text-xs hover:underline disabled:opacity-50 transition-colors ${
-                    isFollowing
-                      ? "text-muted-foreground hover:text-foreground"
-                      : "text-green-600 hover:text-green-700"
-                  }`}
-                >
-                  {isFollowing ? "Unfollow" : "Follow"}
-                </button>
-              </>
+              <button
+                type="button"
+                onClick={onToggleFollow}
+                disabled={isLoading}
+                className={clsx(
+                  "text-[10px] font-black uppercase tracking-widest transition-colors",
+                  isFollowing
+                    ? "text-muted-foreground"
+                    : "text-green-600 hover:text-green-700"
+                )}
+              >
+                {isFollowing ? "Following" : "Follow"}
+              </button>
             )}
           </div>
 
-          {/* Bottom Row: Date + Read Time */}
-          <div className="flex items-center gap-1 text-muted-foreground text-xs">
+          <div className="flex items-center gap-2 text-[10px] font-bold uppercase tracking-widest text-muted-foreground">
             <span>{readingTime || 1} min read</span>
-            <span>·</span>
+            <span className="text-border">|</span>
             <span>
               {createdAt
                 ? format(new Date(createdAt), "MMM d, yyyy")
                 : "Just now"}
             </span>
-            {/* <span
-              className="ml-2 cursor-pointer hover:text-foreground transition-colors"
-              title="Listen to post"
-            >
-              <PlayCircle className="w-4 h-4" />
-            </span> */}
           </div>
         </div>
       </div>
 
-      {/* RIGHT: Actions */}
-      <div className="flex gap-1">
-        <PostShareMenu postTitle={postTitle} postsId={postId} />
-
-        {/* <Button
-          variant="ghost"
-          size="icon"
-          className="text-muted-foreground hover:text-foreground hover:bg-muted"
-        >
-          <MoreHorizontal className="w-5 h-5" />
-        </Button> */}
-      </div>
+      <PostShareMenu postsId={postId} />
     </div>
   );
 }

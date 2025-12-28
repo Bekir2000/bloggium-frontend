@@ -7,28 +7,31 @@ import Link from "next/link";
 
 export function SidebarPostItem({ post }: { post: PostCardResponse }) {
   return (
-    <div className="flex flex-col gap-1 mb-4 last:mb-0">
-      <div className="flex items-center gap-2 mb-1">
-        <Avatar className="h-5 w-5">
+    <div className="group flex flex-col gap-2">
+      {/* Author Byline */}
+      <div className="flex items-center gap-2">
+        <Avatar className="h-5 w-5 border border-border/50 shadow-sm">
           <AvatarImage src={post.author?.imageUrl} />
-          <AvatarFallback className="text-[10px]">
+          <AvatarFallback className="text-[8px] font-black bg-primary/5 text-primary">
             {post.author?.firstName?.[0]}
           </AvatarFallback>
         </Avatar>
-        <span className="text-xs font-medium text-gray-700 truncate">
+        <span className="text-[10px] font-black uppercase tracking-widest text-foreground/80">
           {post.author?.firstName} {post.author?.lastName}
         </span>
       </div>
 
-      <Link href={`/posts/${post.id}`} className="group">
-        <h4 className="text-sm font-bold text-gray-900 group-hover:underline line-clamp-2 leading-snug">
+      {/* Title */}
+      <Link href={`/posts/${post.id}`} className="block">
+        <h4 className="font-sans text-sm font-black leading-tight tracking-tight text-foreground group-hover:text-primary transition-colors line-clamp-2">
           {post.title}
         </h4>
       </Link>
 
-      <div className="text-xs text-gray-500 mt-1">
+      {/* Meta */}
+      <div className="text-[9px] font-bold text-muted-foreground uppercase tracking-[0.15em] flex items-center">
         {post.createdAt && format(new Date(post.createdAt), "MMM d")}
-        {" · "}
+        <span className="mx-2 text-border/60">|</span>
         {post.meta?.readingTimeMinutes ?? 1} min read
       </div>
     </div>

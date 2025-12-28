@@ -1,5 +1,6 @@
 import { SidebarTrigger } from "@/components/ui/sidebar";
 import { getUser } from "@/lib/auth";
+import { cn } from "@/lib/utils";
 import { SquarePenIcon } from "lucide-react";
 import Link from "next/link";
 import { BrandLogo } from "../ui/brand-logo";
@@ -13,32 +14,25 @@ export async function MainNavbar() {
     <BaseNavbar
       user={user}
       left={
-        <>
-          <SidebarTrigger />
+        <div className="flex items-center gap-4">
+          <SidebarTrigger className="hover:bg-accent rounded-full h-9 w-9" />
           <BrandLogo />
-        </>
+        </div>
       }
       center={<NavbarSearch />}
-      // ✅ Only pass the specific buttons for this page
       actions={
-        <>
+        <div className="flex items-center gap-4">
           <Link
             href="/new-story"
-            className="hidden sm:flex items-center gap-1 text-gray-600 hover:text-black transition-colors px-2 text-sm font-medium"
+            className={cn(
+              "hidden sm:flex items-center gap-2 px-4 py-2 rounded-full transition-all",
+              "text-[10px] font-black uppercase tracking-[0.15em] text-foreground/60 hover:text-foreground hover:bg-accent"
+            )}
           >
-            <SquarePenIcon className="w-4 h-4" /> Write
+            <SquarePenIcon className="w-4 h-4" />
+            Write
           </Link>
-
-          {/* <InfoTooltip message="Notifications">
-            <Button
-              variant="ghost"
-              size="icon"
-              className="rounded-full text-gray-500"
-            >
-              <Bell className="w-5 h-5" />
-            </Button>
-          </InfoTooltip> */}
-        </>
+        </div>
       }
     />
   );

@@ -47,7 +47,7 @@ export default async function HomePage(props: HomePageProps) {
           <RightSidebar
             suggestions={suggestedAuthors}
             currentUser={currentUser}
-            bookmarks={bookmarkCards} // 👈 Pass the list here
+            bookmarks={bookmarkCards}
           />
         </div>
       </div>

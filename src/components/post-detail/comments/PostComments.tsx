@@ -1,12 +1,13 @@
 "use client";
 
 import { CommentResponse, UserResponse } from "@/api/generated/model";
-import { Separator } from "@/components/ui/separator";
 import { Skeleton } from "@/components/ui/skeleton";
-import { Loader2 } from "lucide-react";
-import { useEffect } from "react"; // 👈 Don't forget this
+import { Loader2, MessageSquare } from "lucide-react";
+import { useEffect } from "react";
 import { useInView } from "react-intersection-observer";
 
+// Hooks & Logic
+import { Button } from "@/components/ui/button";
 import { usePostComments } from "@/hooks/usePostComments";
 import { CommentForm } from "./CommentForm";
 import { CommentItem } from "./CommentItem";
@@ -14,8 +15,8 @@ import { CommentItem } from "./CommentItem";
 interface PostCommentsProps {
   postId: string;
   currentUser?: UserResponse | null;
-  initialCount?: number; // Renamed for clarity, logic remains similar
-  onCountChange?: (count: number) => void; // 👈 NEW PROP
+  initialCount?: number;
+  onCountChange?: (count: number) => void;
 }
 
 export interface CommentWithChildren extends CommentResponse {
@@ -26,11 +27,11 @@ export function PostComments({
   postId,
   currentUser,
   initialCount = 0,
-  onCountChange, // 👈 Destructure new prop
+  onCountChange,
 }: PostCommentsProps) {
   const {
     comments,
-    totalCount, // This comes from usePostComments (React Query)
+    totalCount,
     isLoading,
     isCreating,
     addComment,
@@ -47,75 +48,111 @@ export function PostComments({
     rootMargin: "100px",
   });
 
-  // 1. Pagination Trigger
+  // Pagination Trigger
   useEffect(() => {
     if (inView && hasNextPage && !isFetchingNextPage) {
       fetchNextPage();
     }
   }, [inView, hasNextPage, isFetchingNextPage, fetchNextPage]);
 
-  // 2. Sync Count to Parent (PostDetail) 👇 NEW LOGIC
+  // Sync Count to Parent (PostDetail)
   useEffect(() => {
-    // Only update parent if totalCount is a valid number (fetched successfully)
     if (typeof totalCount === "number" && onCountChange) {
       onCountChange(totalCount);
     }
   }, [totalCount, onCountChange]);
 
-  // Determine what to show locally in the header
   const displayCount = totalCount !== undefined ? totalCount : initialCount;
 
   return (
-    <section className="mt-12 space-y-8" id="comments">
-      <Separator />
+    <section className="mt-24 space-y-12" id="comments">
+      {/* Editorial Header Section */}
+      <div className="flex items-center gap-6">
+        <div className="flex items-center gap-2">
+          <MessageSquare className="h-4 w-4 text-primary" />
+          <h3 className="text-[10px] font-black uppercase tracking-[0.2em] text-foreground/60">
+            Responses ({displayCount})
+          </h3>
+        </div>
+        <div className="h-px flex-1 bg-border/40" />
+      </div>
 
-      <h3 className="text-lg font-semibold tracking-tight">
-        Comments ({displayCount})
-      </h3>
+      {/* Comment Input Area */}
+      <div className="bg-gray-50/50 dark:bg-zinc-900/50 p-6 sm:p-8 rounded-[2rem] border border-border/40">
+        <CommentForm
+          currentUser={currentUser}
+          onSubmit={(content) => addComment(content)}
+          isSubmitting={isCreating}
+        />
+      </div>
 
-      <CommentForm
-        currentUser={currentUser}
-        onSubmit={(content) => addComment(content)}
-        isSubmitting={isCreating}
-      />
-
-      {/* ... Rest of the render logic is identical to previous version ... */}
-      <div className="space-y-6">
+      {/* Discussion Thread */}
+      <div className="space-y-10">
         {isLoading ? (
-          Array.from({ length: 3 }).map((_, i) => (
-            <div key={i} className="flex gap-4">
-              <Skeleton className="h-9 w-9 rounded-full" />
-              <div className="space-y-2 flex-1">
-                <Skeleton className="h-4 w-[150px]" />
-                <Skeleton className="h-4 w-full" />
+          // Loading Skeletons
+          <div className="space-y-8 px-2">
+            {Array.from({ length: 3 }).map((_, i) => (
+              <div key={i} className="flex gap-4">
+                <Skeleton className="h-10 w-10 rounded-full shrink-0" />
+                <div className="space-y-3 flex-1">
+                  <Skeleton className="h-3 w-32" />
+                  <Skeleton className="h-16 w-full rounded-2xl" />
+                </div>
               </div>
-            </div>
-          ))
+            ))}
+          </div>
         ) : comments.length > 0 ? (
           <>
-            {comments.map((comment) => (
-              <CommentItem
-                key={comment.id}
-                postId={postId}
-                comment={comment as CommentWithChildren}
-                currentUserId={currentUser?.id}
-                onReplySubmit={(content, parentId) =>
-                  addComment(content, parentId)
-                }
-                onDelete={handleDelete}
-              />
-            ))}
+            <div className="divide-y divide-border/30">
+              {comments.map((comment) => (
+                <div key={comment.id} className="py-8 first:pt-0 last:pb-0">
+                  <CommentItem
+                    postId={postId}
+                    comment={comment as CommentWithChildren}
+                    currentUserId={currentUser?.id}
+                    onReplySubmit={(content, parentId) =>
+                      addComment(content, parentId)
+                    }
+                    onDelete={handleDelete}
+                  />
+                </div>
+              ))}
+            </div>
 
-            <div ref={ref} className="flex justify-center py-4 min-h-[50px]">
-              {isFetchingNextPage && (
-                <Loader2 className="h-6 w-6 animate-spin text-muted-foreground" />
+            {/* Infinite Scroll Trigger */}
+            <div ref={ref} className="flex justify-center py-10 min-h-[80px]">
+              {isFetchingNextPage ? (
+                <div className="flex items-center gap-3">
+                  <Loader2 className="h-5 w-5 animate-spin text-primary" />
+                  <span className="text-[10px] font-black uppercase tracking-widest text-muted-foreground">
+                    Loading older comments
+                  </span>
+                </div>
+              ) : hasNextPage ? (
+                <Button
+                  variant="ghost"
+                  onClick={() => fetchNextPage()}
+                  className="text-[10px] font-black uppercase tracking-widest"
+                >
+                  Load More
+                </Button>
+              ) : (
+                <p className="text-[10px] font-black uppercase tracking-widest text-muted-foreground/40">
+                  End of discussion
+                </p>
               )}
             </div>
           </>
         ) : (
-          <p className="text-center text-sm text-muted-foreground py-8">
-            No comments yet. Be the first to share your thoughts!
-          </p>
+          <div className="text-center py-20 px-4 rounded-[2.5rem] bg-gray-50/30 dark:bg-zinc-900/20 border border-dashed border-border/60">
+            <p className="font-serif italic text-muted-foreground text-lg">
+              The conversation hasn't started yet.
+              <br />
+              <span className="text-sm font-sans not-italic font-medium text-primary mt-2 block uppercase tracking-widest">
+                Be the first to share your thoughts
+              </span>
+            </p>
+          </div>
         )}
       </div>
     </section>

@@ -4,9 +4,9 @@ import { PostCardResponse, UserResponse } from "@/api/generated/model";
 import { DraftsFeed, PublishedFeed } from "@/components/stories/StoryFeeds";
 import { Button } from "@/components/ui/button";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { ChevronLeft } from "lucide-react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
+import { BackButton } from "../ui/back-button";
 
 interface UserStoriesTabsProps {
   currentUser: UserResponse | null;
@@ -22,49 +22,46 @@ export function UserStoriesTabs({
   const router = useRouter();
 
   return (
-    <div>
-      <div className="flex items-center justify-between mb-8">
-        <div className="flex items-center gap-2">
-          <Button
-            variant="ghost"
-            size="icon"
-            onClick={() => router.back()}
-            className="-ml-3 text-gray-500 hover:text-black"
-          >
-            <ChevronLeft className="w-6 h-6" />
-          </Button>
-          <h1 className="text-3xl font-serif font-bold">Your Stories</h1>
+    <div className="space-y-12">
+      <div className="flex items-center justify-between">
+        <div className="flex flex-col gap-4">
+          <BackButton />
+          <h1 className="font-sans text-4xl font-black leading-none tracking-tighter text-foreground md:text-5xl">
+            Your Stories
+          </h1>
         </div>
         <Button
           asChild
-          className="rounded-full bg-green-600 hover:bg-green-700"
+          className="rounded-full bg-foreground text-background hover:bg-foreground/90 px-6 text-[10px] font-black uppercase tracking-widest shadow-lg shadow-black/5"
         >
           <Link href="/new-story">Write a story</Link>
         </Button>
       </div>
 
       <Tabs defaultValue="drafts" className="w-full">
-        <TabsList className="mb-6 border-b w-full justify-start rounded-none h-auto p-0 bg-transparent">
+        <TabsList className="mb-10 border-b border-border/50 w-full justify-start rounded-none h-auto p-0 bg-transparent gap-8">
           <TabsTrigger
             value="drafts"
-            className="data-[state=active]:border-black data-[state=active]:shadow-none border-b-2 border-transparent rounded-none pb-3 px-1 mr-6"
+            className="data-[state=active]:border-foreground data-[state=active]:text-foreground border-b-2 border-transparent rounded-none pb-4 px-0 bg-transparent text-[11px] font-black uppercase tracking-[0.2em] text-muted-foreground transition-all shadow-none"
           >
             Drafts{" "}
-            {initialDrafts.length > 0 ? `(${initialDrafts.length}+)` : ""}
+            {initialDrafts.length > 0 && (
+              <span className="ml-1 opacity-50">({initialDrafts.length})</span>
+            )}
           </TabsTrigger>
           <TabsTrigger
             value="published"
-            className="data-[state=active]:border-black data-[state=active]:shadow-none border-b-2 border-transparent rounded-none pb-3 px-1"
+            className="data-[state=active]:border-foreground data-[state=active]:text-foreground border-b-2 border-transparent rounded-none pb-4 px-0 bg-transparent text-[11px] font-black uppercase tracking-[0.2em] text-muted-foreground transition-all shadow-none"
           >
             Published
           </TabsTrigger>
         </TabsList>
 
-        <TabsContent value="drafts">
+        <TabsContent value="drafts" className="mt-0 focus-visible:ring-0">
           <DraftsFeed initialPosts={initialDrafts} currentUser={currentUser} />
         </TabsContent>
 
-        <TabsContent value="published">
+        <TabsContent value="published" className="mt-0 focus-visible:ring-0">
           <PublishedFeed
             initialPosts={initialPublished}
             currentUser={currentUser}

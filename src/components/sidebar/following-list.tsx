@@ -1,62 +1,65 @@
-"use client"; // This directive is crucial!
+"use client";
 
 import { UserResponse } from "@/api/generated/model";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import {
   SidebarGroup,
   SidebarGroupContent,
   SidebarGroupLabel,
-  SidebarMenu, // Optional: if you want them clickable
+  SidebarMenu,
   SidebarMenuItem,
 } from "@/components/ui/sidebar";
 import { useRouter } from "next/navigation";
 import { useEffect } from "react";
 
-interface FollowingListProps {
+export function FollowingList({
+  initialItems,
+}: {
   initialItems: UserResponse[];
-}
-
-export function FollowingList({ initialItems }: FollowingListProps) {
+}) {
   const router = useRouter();
 
   useEffect(() => {
-    // Poll for updates every 10 seconds
     const interval = setInterval(() => {
-      // router.refresh() triggers a silent re-fetch of server components
-      // It keeps the state but updates the data (props)
       router.refresh();
     }, 10000);
-
     return () => clearInterval(interval);
   }, [router]);
 
   return (
-    <SidebarGroup>
-      <SidebarGroupLabel className="text-sm text-muted-foreground mt-6 mb-3">
+    <SidebarGroup className="p-0">
+      <SidebarGroupLabel className="text-[10px] font-black uppercase tracking-[0.2em] text-foreground/50 mb-6 px-2">
         Following
       </SidebarGroupLabel>
       <SidebarGroupContent>
-        <SidebarMenu>
+        <SidebarMenu className="gap-3">
           {initialItems.map((user) => (
-            <SidebarMenuItem
-              key={user.id}
-              className="mb-1 last:mb-0 cursor-pointer"
-            >
-              {/* Wrapped in a div or button for layout */}
-              <div className="flex items-center space-x-3 py-2 px-2 hover:bg-sidebar-accent rounded-md transition-colors">
-                <div className="relative">
-                  <img
-                    src={user.profileImageUrl}
-                    alt={user.firstName || "User Avatar"}
-                    className="w-8 h-8 rounded-full object-cover"
-                  />
-                  {/* The Green Dot - Now Dynamic */}
-                  {user.isOnline && (
-                    <span className="absolute bottom-0 right-0 block w-2.5 h-2.5 rounded-full border-2 border-white bg-green-500 shadow-sm" />
-                  )}
+            <SidebarMenuItem key={user.id} className="px-2">
+              <div className="flex items-center justify-between group cursor-pointer">
+                <div className="flex items-center gap-3">
+                  <div className="relative">
+                    <Avatar className="h-8 w-8 border-2 border-background shadow-sm group-hover:ring-2 ring-primary/20 transition-all">
+                      <AvatarImage
+                        src={user.profileImageUrl || ""}
+                        className="object-cover"
+                      />
+                      <AvatarFallback className="text-[10px] font-bold bg-primary/5 text-primary">
+                        {user.firstName?.[0]}
+                      </AvatarFallback>
+                    </Avatar>
+                    {user.isOnline && (
+                      <span className="absolute bottom-0 right-0 block w-2.5 h-2.5 rounded-full border-2 border-background bg-green-500 shadow-sm" />
+                    )}
+                  </div>
+                  <div className="flex flex-col">
+                    <span className="text-[10px] font-black uppercase tracking-widest text-foreground/80 group-hover:text-foreground transition-colors">
+                      {user.firstName} {user.lastName}
+                    </span>
+                    <span className="text-[8px] font-medium text-muted-foreground uppercase tracking-widest">
+                      {user.isOnline ? "Online" : "Offline"}
+                    </span>
+                  </div>
                 </div>
-                <span className="text-sm font-medium text-gray-700 dark:text-gray-300">
-                  {user.firstName} {user.lastName}
-                </span>
               </div>
             </SidebarMenuItem>
           ))}

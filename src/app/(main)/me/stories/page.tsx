@@ -15,7 +15,6 @@ export default async function StoriesPage() {
     redirect("/login?next=/me/stories");
   }
 
-  // Fetch initial data server-side
   const [draftsRes, publishedRes] = await Promise.all([
     getMyDrafts({ page: 0, size: 5 }),
     getAllPostCards({
@@ -26,7 +25,7 @@ export default async function StoriesPage() {
   ]);
 
   return (
-    <div className="container max-w-4xl mx-auto py-10 px-6">
+    <div className="mx-auto max-w-[680px] px-6 py-10 md:py-20 animate-in fade-in duration-700">
       <UserStoriesTabs
         currentUser={currentUser}
         initialDrafts={draftsRes.content ?? []}

@@ -1,4 +1,4 @@
-import { Button } from "@/components/ui/button";
+import clsx from "clsx";
 import { Bookmark, MessageCircle, ThumbsUp } from "lucide-react";
 
 interface PostActionBarProps {
@@ -20,53 +20,50 @@ export function PostActionBar({
   isLoading,
   onToggleBookmark,
   onToggleLike,
-  onCommentClick, // <--- Destructure this
+  onCommentClick,
 }: PostActionBarProps) {
   return (
-    <div className="flex items-center justify-between border-y border-gray-100 py-3 dark:border-gray-800 mb-8">
-      <div className="flex items-center gap-6">
-        <Button
-          variant="ghost"
+    <div className="sticky top-20 z-10 flex items-center justify-between border-y border-border/50 bg-white/80 py-3 backdrop-blur-md dark:bg-zinc-950/80 mb-12">
+      <div className="flex items-center gap-8">
+        <button
           onClick={onToggleLike}
           disabled={isLoading}
-          className={`flex items-center gap-2 px-0 hover:bg-transparent transition-colors ${
+          className={clsx(
+            "flex items-center gap-2 transition-colors",
             isLiked
-              ? "text-blue-600 dark:text-blue-500 hover:text-blue-700"
-              : "text-gray-500 hover:text-black dark:hover:text-white"
-          }`}
+              ? "text-primary"
+              : "text-muted-foreground hover:text-foreground"
+          )}
         >
-          <ThumbsUp className={`w-5 h-5 ${isLiked ? "fill-current" : ""}`} />
-          <span className="text-sm">{likes}</span>
-        </Button>
+          <ThumbsUp className={clsx("w-5 h-5", isLiked && "fill-current")} />
+          <span className="text-[11px] font-black tracking-widest uppercase">
+            {likes}
+          </span>
+        </button>
 
-        {/* --- UPDATE THIS BUTTON --- */}
-        <Button
-          variant="ghost"
-          onClick={onCommentClick} // <--- Attach handler here
-          className="flex items-center gap-2 px-0 hover:bg-transparent hover:text-black dark:hover:text-white"
+        <button
+          onClick={onCommentClick}
+          className="flex items-center gap-2 text-muted-foreground hover:text-foreground transition-colors"
         >
-          <MessageCircle className="w-5 h-5 text-gray-500" />
-          <span className="text-sm text-gray-500">{comments}</span>
-        </Button>
+          <MessageCircle className="w-5 h-5" />
+          <span className="text-[11px] font-black tracking-widest uppercase">
+            {comments}
+          </span>
+        </button>
       </div>
 
-      <div>
-        <Button
-          variant="ghost"
-          size="icon"
-          onClick={onToggleBookmark}
-          disabled={isLoading}
-          className="text-gray-500 hover:text-black dark:hover:text-white disabled:opacity-50"
-        >
-          <Bookmark
-            className={`w-5 h-5 transition-colors ${
-              isBookmarked
-                ? "fill-black text-black dark:fill-white dark:text-white"
-                : ""
-            }`}
-          />
-        </Button>
-      </div>
+      <button
+        onClick={onToggleBookmark}
+        disabled={isLoading}
+        className="text-muted-foreground hover:text-foreground transition-colors"
+      >
+        <Bookmark
+          className={clsx(
+            "w-5 h-5",
+            isBookmarked && "fill-current text-foreground"
+          )}
+        />
+      </button>
     </div>
   );
 }
