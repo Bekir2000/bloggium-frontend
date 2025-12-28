@@ -4,6 +4,10 @@ const nextConfig = {
     remotePatterns: [
       {
         protocol: "https",
+        hostname: "plus.unsplash.com",
+      },
+      {
+        protocol: "https",
         hostname: "images.unsplash.com",
       },
       {
@@ -20,7 +24,6 @@ const nextConfig = {
       },
     ],
   },
-  // 👇 This fixes the build errors by ignoring strict checks during deployment
   typescript: {
     ignoreBuildErrors: true,
   },
