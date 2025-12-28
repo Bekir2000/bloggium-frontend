@@ -1,7 +1,14 @@
 "use client";
 
 import { useQueryClient } from "@tanstack/react-query";
-import { ArrowLeft, ImagePlus, MoreHorizontal, X } from "lucide-react";
+import {
+  AlertCircle,
+  ArrowLeft,
+  ImagePlus,
+  Loader2,
+  MoreHorizontal,
+  X,
+} from "lucide-react";
 import Image from "next/image";
 import { useRouter } from "next/navigation";
 import React, { useEffect, useRef, useState } from "react";
@@ -20,22 +27,20 @@ import {
 // API & Models
 import {
   getGetDraftByIdQueryKey,
-  useAddNewDraft,
   useCreateFirstDraft,
   usePublishPost,
   useSafeDraft,
-} from "@/api/generated/client/post-controller/post-controller"; // Adjust path
+} from "@/api/generated/client/post-controller/post-controller";
 import type {
   DraftDetailResponse,
   PostDraftRequest,
   PostDraftRequestCategory,
-} from "@/api/generated/model"; // Adjust path
+} from "@/api/generated/model";
 
-// Your Modal
 import { UnsplashModal } from "@/components/editor/UnsplashModal";
+import { cn } from "@/lib/utils"; // Assuming you have a cn utility for classes
 import { toast } from "sonner";
 
-// --- CONSTANTS ---
 const CATEGORIES: PostDraftRequestCategory[] = [
   "TECHNOLOGY",
   "LIFESTYLE",
@@ -53,42 +58,63 @@ export const PostEditor: React.FC<PostEditorProps> = ({ draftToEdit }) => {
   const router = useRouter();
   const queryClient = useQueryClient();
 
-  // Refs for auto-resizing
   const titleRef = useRef<HTMLTextAreaElement>(null);
   const contentRef = useRef<HTMLTextAreaElement>(null);
 
-  // --- 1. LOCAL STATE ---
+  // --- STATE ---
   const [title, setTitle] = useState(draftToEdit?.title || "");
   const [content, setContent] = useState(draftToEdit?.content || "");
   const [imageUrl, setImageUrl] = useState(draftToEdit?.imageUrl || "");
-
   const [category, setCategory] = useState<
     PostDraftRequestCategory | undefined
   >(draftToEdit?.category as PostDraftRequestCategory | undefined);
   const [tags, setTags] = useState<string[]>(draftToEdit?.tags || []);
   const [tagInput, setTagInput] = useState("");
 
-  // UI State
   const [isUnsplashOpen, setIsUnsplashOpen] = useState(false);
   const [showSettings, setShowSettings] = useState(false);
+  const [triedToPublish, setTriedToPublish] = useState(false);
 
-  // ID State
   const [postId, setPostId] = useState<string | undefined>(draftToEdit?.postId);
   const [draftId, setDraftId] = useState<string | undefined>(draftToEdit?.id);
 
-  // Sync Data
-  useEffect(() => {
-    const data = draftToEdit;
-    if (data) {
-      setTitle(data.title || "");
-      setContent(data.content || "");
-      setImageUrl(data.imageUrl || "");
-      setCategory(data.category as PostDraftRequestCategory | undefined);
-      setTags(data.tags || []);
-    }
-  }, [draftToEdit]);
+  // --- MUTATIONS ---
+  const createFirstDraftMutation = useCreateFirstDraft();
+  const saveDraftMutation = useSafeDraft();
+  const publishMutation = usePublishPost();
 
-  // Auto-resize logic
+  const isSaving =
+    createFirstDraftMutation.isPending || saveDraftMutation.isPending;
+  const isPublishing = publishMutation.isPending;
+
+  // --- VALIDATION RULES ---
+  const validatePost = () => {
+    setTriedToPublish(true); // Triggers red borders/UI highlights
+
+    if (!imageUrl) {
+      toast.error("A cover image is required to publish");
+      window.scrollTo({ top: 0, behavior: "smooth" });
+      return false;
+    }
+    if (title.trim().length < 5) {
+      toast.error("Title is too short (min 5 characters)");
+      titleRef.current?.focus();
+      return false;
+    }
+    if (!category) {
+      toast.error("Please select a category in settings");
+      setShowSettings(true);
+      return false;
+    }
+    if (content.trim().length < 50) {
+      toast.error("Story is too short (min 50 characters)");
+      contentRef.current?.focus();
+      return false;
+    }
+    return true;
+  };
+
+  // --- HELPERS ---
   const autoResize = (elem: HTMLTextAreaElement | null) => {
     if (elem) {
       elem.style.height = "auto";
@@ -96,53 +122,27 @@ export const PostEditor: React.FC<PostEditorProps> = ({ draftToEdit }) => {
     }
   };
 
-  useEffect(() => {
-    autoResize(titleRef.current);
-  }, [title]);
-  useEffect(() => {
-    autoResize(contentRef.current);
-  }, [content]);
+  useEffect(() => autoResize(titleRef.current), [title]);
+  useEffect(() => autoResize(contentRef.current), [content]);
 
-  // --- 3. MUTATIONS ---
-  const createFirstDraftMutation = useCreateFirstDraft();
-  const addNewDraftMutation = useAddNewDraft();
-  const saveDraftMutation = useSafeDraft();
-  const publishMutation = usePublishPost({
-    mutation: {
-      onSuccess: () => {
-        toast.success("Post published successfully!");
-        // Navigate to the editor with the NEW draft ID
-        // Assuming API returns: { postId: "...", draftId: "..." }
-        router.push(`/post-feed/${postId}`);
-      },
-      onError: () => toast.error("Could not create revision draft"),
-    },
-  });
-
-  const isSaving =
-    createFirstDraftMutation.isPending ||
-    addNewDraftMutation.isPending ||
-    saveDraftMutation.isPending;
-
-  // --- 4. HANDLERS ---
   const handleAddTag = (e: React.KeyboardEvent<HTMLInputElement>) => {
     if (e.key === "Enter") {
       e.preventDefault();
       const trimmed = tagInput.trim();
-      if (trimmed && !tags.includes(trimmed)) {
-        if (tags.length >= 10) return; // Silent fail or toast
+      if (trimmed && !tags.includes(trimmed) && tags.length < 10) {
         setTags([...tags, trimmed]);
         setTagInput("");
       }
     }
   };
 
-  const removeTag = (tagToRemove: string) => {
-    setTags(tags.filter((t) => t !== tagToRemove));
-  };
+  // --- CORE LOGIC ---
 
   const handleSave = async (silent = false) => {
-    if (!silent && title.length < 3) return alert("Title too short"); // Use Toast in real app
+    if (title.length < 1) {
+      if (!silent) toast.error("Title cannot be empty to save");
+      return null;
+    }
 
     const payload: PostDraftRequest = {
       title,
@@ -153,70 +153,74 @@ export const PostEditor: React.FC<PostEditorProps> = ({ draftToEdit }) => {
     };
 
     try {
-      if (!postId) {
+      let currentPostId = postId;
+      let currentDraftId = draftId;
+
+      if (!currentPostId) {
         const res = await createFirstDraftMutation.mutateAsync({
           data: payload,
         });
-        setPostId(res.data.postId);
-        setDraftId(res.data.draftId);
-      } else if (postId && draftId) {
-        await saveDraftMutation.mutateAsync({ postId, draftId, data: payload });
-      }
-      if (postId && draftId) {
-        await queryClient.invalidateQueries({
-          // This generates the correct key automatically:
-          queryKey: getGetDraftByIdQueryKey(postId, draftId),
+        currentPostId = res.data.postId;
+        currentDraftId = res.data.draftId;
+        setPostId(currentPostId);
+        setDraftId(currentDraftId);
+      } else if (currentPostId && currentDraftId) {
+        await saveDraftMutation.mutateAsync({
+          postId: currentPostId,
+          draftId: currentDraftId,
+          data: payload,
         });
       }
-      if (!silent) console.log("Saved");
-      router.back();
+
+      if (currentPostId && currentDraftId) {
+        await queryClient.invalidateQueries({
+          queryKey: getGetDraftByIdQueryKey(currentPostId, currentDraftId),
+        });
+      }
+
+      if (!silent) toast.success("Draft saved");
+      return { postId: currentPostId, draftId: currentDraftId };
     } catch (error) {
-      console.error("Save failed", error);
+      toast.error("Save failed");
+      return null;
     }
   };
 
   const handlePublish = async () => {
-    if (!postId || !draftId) return alert("Save draft first");
+    if (!validatePost()) return;
 
-    // Final save before publish
-    await saveDraftMutation.mutateAsync({
-      postId,
-      draftId,
-      data: { title, content, imageUrl, category, tags },
-    });
+    const savedData = await handleSave(true);
+    if (!savedData) return;
 
     try {
-      await publishMutation.mutateAsync({ postId, draftId });
-      setDraftId(undefined);
-      queryClient.invalidateQueries({ queryKey: [`/api/v1/posts/${postId}`] });
-      router.push(`/post-feed/${postId}`);
+      await publishMutation.mutateAsync({
+        postId: savedData.postId!,
+        draftId: savedData.draftId!,
+      });
+
+      toast.success("Post live!");
+      router.push(`/post-feed/${savedData.postId}`);
     } catch (error) {
-      console.error("Publish failed", error);
+      toast.error("Publishing failed");
     }
   };
 
   return (
     <div className="min-h-screen bg-background text-foreground pb-40">
-      {/* --- HEADER --- */}
-      <nav className="sticky top-0 z-50 w-full border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
-        <div className="container flex h-14 max-w-5xl items-center justify-between px-4 md:px-6">
+      {/* HEADER */}
+      <nav className="sticky top-0 z-50 w-full border-b bg-background/95 backdrop-blur">
+        <div className="container flex h-14 max-w-5xl items-center justify-between px-4">
           <div className="flex items-center gap-4">
-            {/* Back Button (Optional) */}
-            <Button
-              onClick={() => router.back()}
-              variant="ghost"
-              size="icon"
-              className="text-muted-foreground"
-            >
+            <Button onClick={() => router.back()} variant="ghost" size="icon">
               <ArrowLeft className="h-4 w-4" />
             </Button>
-
             <div className="flex flex-col">
-              <span className="text-sm font-semibold tracking-tight">
-                {draftId ? "Draft" : postId ? "Editing Live" : "New Story"}
+              <span className="text-sm font-semibold">
+                {postId ? "Drafting" : "New Story"}
               </span>
-              <span className="text-[10px] text-muted-foreground">
-                {isSaving ? "Saving..." : "Saved locally"}
+              <span className="text-[10px] text-muted-foreground flex items-center gap-1">
+                {isSaving && <Loader2 className="h-2 w-2 animate-spin" />}
+                {isSaving ? "Syncing..." : "Saved"}
               </span>
             </div>
           </div>
@@ -226,18 +230,20 @@ export const PostEditor: React.FC<PostEditorProps> = ({ draftToEdit }) => {
               variant="ghost"
               size="sm"
               onClick={() => handleSave(false)}
-              disabled={isSaving}
-              className="hidden sm:flex"
+              disabled={isSaving || isPublishing}
             >
-              Save Draft
+              Save
             </Button>
 
             <Button
               size="sm"
               onClick={handlePublish}
-              disabled={isSaving || !postId}
-              className="bg-green-600 hover:bg-green-700 text-white"
+              disabled={isSaving || isPublishing}
+              className="bg-green-600 hover:bg-green-700 text-white font-medium"
             >
+              {isPublishing ? (
+                <Loader2 className="mr-2 h-3 w-3 animate-spin" />
+              ) : null}
               Publish
             </Button>
 
@@ -245,32 +251,44 @@ export const PostEditor: React.FC<PostEditorProps> = ({ draftToEdit }) => {
               variant="ghost"
               size="icon"
               onClick={() => setShowSettings(!showSettings)}
-              className={showSettings ? "bg-accent text-accent-foreground" : ""}
+              className={
+                triedToPublish && !category ? "text-red-500 animate-pulse" : ""
+              }
             >
-              <MoreHorizontal className="h-4 w-4" />
+              {triedToPublish && !category ? (
+                <AlertCircle className="h-4 w-4" />
+              ) : (
+                <MoreHorizontal className="h-4 w-4" />
+              )}
             </Button>
           </div>
         </div>
       </nav>
 
-      {/* --- EDITOR CONTENT --- */}
-      <main className="container max-w-3xl mx-auto px-4 md:px-6 mt-12 animate-in fade-in slide-in-from-bottom-4 duration-700">
-        {/* Cover Image */}
-        <div className="group relative mb-8">
+      <main className="container max-w-3xl mx-auto px-4 mt-12 animate-in fade-in duration-500">
+        {/* Cover Image Section */}
+        <div className="group relative mb-10">
           {!imageUrl ? (
             <Button
               variant="outline"
-              className="h-auto py-8 w-full border-dashed text-muted-foreground hover:text-foreground hover:bg-accent/50"
+              className={cn(
+                "h-48 w-full border-dashed border-2 flex flex-col gap-2 text-muted-foreground transition-all",
+                triedToPublish &&
+                  !imageUrl &&
+                  "border-red-500 bg-red-50/10 text-red-500"
+              )}
               onClick={() => setIsUnsplashOpen(true)}
             >
-              <ImagePlus className="mr-2 h-4 w-4" />
-              Add a cover image
+              <ImagePlus className="h-8 w-8" />
+              <span className="font-medium">Add a cover image *</span>
+              {triedToPublish && !imageUrl && (
+                <span className="text-xs">Image is required to publish</span>
+              )}
             </Button>
           ) : (
-            <div className="relative w-full aspect-video md:aspect-[2/1] rounded-lg overflow-hidden bg-muted shadow-sm">
+            <div className="relative w-full aspect-video rounded-xl overflow-hidden shadow-lg border border-border">
               <Image src={imageUrl} alt="Cover" fill className="object-cover" />
-              {/* Hover Overlay */}
-              <div className="absolute inset-0 bg-black/0 group-hover:bg-black/10 transition-colors flex items-center justify-center opacity-0 group-hover:opacity-100 gap-2">
+              <div className="absolute inset-0 flex items-center justify-center opacity-0 group-hover:opacity-100 bg-black/40 transition-all gap-3">
                 <Button
                   variant="secondary"
                   size="sm"
@@ -290,61 +308,65 @@ export const PostEditor: React.FC<PostEditorProps> = ({ draftToEdit }) => {
           )}
         </div>
 
-        {/* Title */}
         <textarea
           ref={titleRef}
-          placeholder="Title"
-          className="w-full resize-none overflow-hidden bg-transparent text-4xl md:text-5xl font-bold font-serif leading-tight placeholder:text-muted-foreground/40 focus:outline-none mb-4"
+          placeholder="Enter title..."
+          className={cn(
+            "w-full resize-none bg-transparent text-4xl md:text-5xl font-bold font-serif focus:outline-none mb-6 placeholder:text-muted-foreground/30",
+            triedToPublish && title.length < 5 && "placeholder:text-red-300"
+          )}
           rows={1}
           value={title}
           onChange={(e) => setTitle(e.target.value)}
-          onKeyDown={(e) => {
-            if (e.key === "Enter") {
-              e.preventDefault();
-              contentRef.current?.focus();
-            }
-          }}
         />
 
-        {/* Content */}
         <textarea
           ref={contentRef}
           placeholder="Tell your story..."
-          className="w-full resize-none overflow-hidden bg-transparent text-lg md:text-xl font-serif leading-relaxed text-foreground placeholder:text-muted-foreground/40 focus:outline-none min-h-[50vh]"
+          className="w-full resize-none bg-transparent text-lg md:text-xl font-serif leading-relaxed focus:outline-none min-h-[60vh] placeholder:text-muted-foreground/30"
           value={content}
           onChange={(e) => setContent(e.target.value)}
         />
       </main>
 
-      {/* --- SETTINGS SECTION (Slide Down) --- */}
+      {/* SETTINGS DRAWER */}
       {showSettings && (
-        <div className="fixed bottom-0 left-0 right-0 border-t bg-background/95 backdrop-blur p-6 z-40 shadow-2xl animate-in slide-in-from-bottom-10">
+        <div className="fixed bottom-0 left-0 right-0 border-t bg-background p-6 z-40 shadow-[0_-10px_40px_rgba(0,0,0,0.1)] animate-in slide-in-from-bottom-full duration-300">
           <div className="max-w-3xl mx-auto space-y-6">
             <div className="flex items-center justify-between">
-              <h3 className="text-sm font-medium uppercase tracking-wider text-muted-foreground">
-                Publishing Details
-              </h3>
+              <div>
+                <h3 className="text-lg font-semibold">Post Settings</h3>
+                <p className="text-xs text-muted-foreground">
+                  Required to publish your post
+                </p>
+              </div>
               <Button
                 variant="ghost"
                 size="icon"
                 onClick={() => setShowSettings(false)}
-                className="h-6 w-6"
               >
                 <X className="h-4 w-4" />
               </Button>
             </div>
 
             <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
-              {/* Category Select */}
-              <div className="space-y-2">
-                <label className="text-sm font-medium">Category</label>
+              <div className="space-y-3">
+                <label className="text-sm font-bold flex items-center gap-2">
+                  Category <span className="text-red-500">*</span>
+                </label>
                 <Select
                   value={category || ""}
                   onValueChange={(val) =>
                     setCategory(val as PostDraftRequestCategory)
                   }
                 >
-                  <SelectTrigger className="w-full">
+                  <SelectTrigger
+                    className={cn(
+                      triedToPublish &&
+                        !category &&
+                        "border-red-500 ring-red-500"
+                    )}
+                  >
                     <SelectValue placeholder="Select a topic..." />
                   </SelectTrigger>
                   <SelectContent>
@@ -357,30 +379,22 @@ export const PostEditor: React.FC<PostEditorProps> = ({ draftToEdit }) => {
                 </Select>
               </div>
 
-              {/* Tags Input */}
-              <div className="space-y-2">
-                <label className="text-sm font-medium flex justify-between">
-                  Tags{" "}
-                  <span className="text-xs text-muted-foreground font-normal">
-                    Max 10
-                  </span>
-                </label>
-                <div className="min-h-[2.5rem] p-2 border rounded-md bg-background flex flex-wrap gap-2 focus-within:ring-2 focus-within:ring-ring focus-within:ring-offset-2">
+              <div className="space-y-3">
+                <label className="text-sm font-bold">Tags</label>
+                <div className="min-h-[2.5rem] p-2 border rounded-md flex flex-wrap gap-2 focus-within:ring-1 focus-within:ring-primary">
                   {tags.map((tag) => (
-                    <Badge
-                      key={tag}
-                      variant="secondary"
-                      className="hover:bg-destructive hover:text-destructive-foreground cursor-pointer"
-                      onClick={() => removeTag(tag)}
-                    >
-                      {tag} &times;
+                    <Badge key={tag} variant="secondary" className="gap-1 pr-1">
+                      {tag}
+                      <X
+                        className="h-3 w-3 cursor-pointer"
+                        onClick={() => setTags(tags.filter((t) => t !== tag))}
+                      />
                     </Badge>
                   ))}
                   {tags.length < 10 && (
                     <input
-                      type="text"
-                      className="flex-1 bg-transparent outline-none text-sm min-w-[80px] placeholder:text-muted-foreground"
-                      placeholder={tags.length === 0 ? "Add tags..." : ""}
+                      className="flex-1 bg-transparent outline-none text-sm min-w-[80px]"
+                      placeholder="Add tag..."
                       value={tagInput}
                       onChange={(e) => setTagInput(e.target.value)}
                       onKeyDown={handleAddTag}
@@ -389,11 +403,17 @@ export const PostEditor: React.FC<PostEditorProps> = ({ draftToEdit }) => {
                 </div>
               </div>
             </div>
+
+            <Button
+              className="w-full md:w-auto"
+              onClick={() => setShowSettings(false)}
+            >
+              Done
+            </Button>
           </div>
         </div>
       )}
 
-      {/* --- MODAL --- */}
       <UnsplashModal
         open={isUnsplashOpen}
         onOpenChange={setIsUnsplashOpen}

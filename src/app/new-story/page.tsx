@@ -10,5 +10,5 @@ export default async function NewStoryPage() {
     redirect("/login?redirect=/new-story");
   }
 
-  return <PostEditor currentUser={user} />;
+  return <PostEditor />;
 }
