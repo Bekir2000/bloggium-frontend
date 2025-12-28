@@ -102,7 +102,7 @@ export function StoryList({ initialPosts, queryResult, type }: StoryListProps) {
 
   const handleEdit = (post: PostCardResponse) => {
     if (type === "DRAFT") {
-      const parentId = post.postId || post.id!;
+      const parentId = post.id!;
       router.push(`/posts/${parentId}/drafts/${post.id}/edit`);
     } else {
       addDraft({ postId: post.id! });

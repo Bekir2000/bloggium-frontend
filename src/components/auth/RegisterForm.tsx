@@ -1,14 +1,7 @@
 "use client";
 import { RegisterRequest } from "@/api/generated/model";
 import { Button } from "@/components/ui/button";
-import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardFooter,
-  CardHeader,
-  CardTitle,
-} from "@/components/ui/card";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import {
   Form,
   FormControl,
@@ -19,6 +12,7 @@ import {
 } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
 import { zodResolver } from "@hookform/resolvers/zod";
+import Link from "next/link";
 import * as React from "react";
 import { useForm } from "react-hook-form";
 import { z } from "zod";
@@ -53,82 +47,114 @@ export const RegisterForm: React.FC = () => {
   };
 
   return (
-    <Card>
-      <CardHeader>
-        <CardTitle>Register</CardTitle>
-        <CardDescription>Create your account</CardDescription>
-      </CardHeader>
-      <CardContent>
-        <Form {...form}>
-          <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
-            <FormField
-              control={form.control}
-              name="name"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Name</FormLabel>
-                  <FormControl>
-                    <Input placeholder="Your name" {...field} />
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
-            <FormField
-              control={form.control}
-              name="email"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Email</FormLabel>
-                  <FormControl>
-                    <Input
-                      type="email"
-                      placeholder="you@example.com"
-                      {...field}
-                    />
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
-            <FormField
-              control={form.control}
-              name="password"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Password</FormLabel>
-                  <FormControl>
-                    <Input type="password" placeholder="Password" {...field} />
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
-            <FormField
-              control={form.control}
-              name="confirmPassword"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Confirm Password</FormLabel>
-                  <FormControl>
-                    <Input
-                      type="password"
-                      placeholder="Confirm password"
-                      {...field}
-                    />
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
-            <CardFooter>
-              <Button type="submit" className="w-full">
-                Register
+    <div className="space-y-6">
+      <Card className="border-none shadow-[0_24px_48px_-12px_rgba(0,0,0,0.08)] rounded-[2.5rem] p-4 bg-gray-50/50 dark:bg-zinc-900/50">
+        <CardHeader className="pb-8 pt-6">
+          <CardTitle className="text-[10px] font-black uppercase tracking-[0.2em] text-primary">
+            Account Registration
+          </CardTitle>
+        </CardHeader>
+        <CardContent>
+          <Form {...form}>
+            <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
+              <FormField
+                control={form.control}
+                name="name"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel className="text-[10px] font-black uppercase tracking-widest text-foreground/70 ml-1">
+                      Full Name
+                    </FormLabel>
+                    <FormControl>
+                      <Input
+                        className="h-14 rounded-2xl border-2 border-border/50 px-6"
+                        placeholder="Jacob Kovacek"
+                        {...field}
+                      />
+                    </FormControl>
+                    <FormMessage className="text-[10px] font-bold uppercase" />
+                  </FormItem>
+                )}
+              />
+              <FormField
+                control={form.control}
+                name="email"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel className="text-[10px] font-black uppercase tracking-widest text-foreground/70 ml-1">
+                      Email
+                    </FormLabel>
+                    <FormControl>
+                      <Input
+                        type="email"
+                        className="h-14 rounded-2xl border-2 border-border/50 px-6"
+                        placeholder="you@example.com"
+                        {...field}
+                      />
+                    </FormControl>
+                    <FormMessage className="text-[10px] font-bold uppercase" />
+                  </FormItem>
+                )}
+              />
+              <div className="grid grid-cols-2 gap-4">
+                <FormField
+                  control={form.control}
+                  name="password"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel className="text-[10px] font-black uppercase tracking-widest text-foreground/70 ml-1">
+                        Password
+                      </FormLabel>
+                      <FormControl>
+                        <Input
+                          type="password"
+                          className="h-14 rounded-2xl border-2 border-border/50 px-6"
+                          placeholder="••••••"
+                          {...field}
+                        />
+                      </FormControl>
+                    </FormItem>
+                  )}
+                />
+                <FormField
+                  control={form.control}
+                  name="confirmPassword"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel className="text-[10px] font-black uppercase tracking-widest text-foreground/70 ml-1">
+                        Confirm
+                      </FormLabel>
+                      <FormControl>
+                        <Input
+                          type="password"
+                          className="h-14 rounded-2xl border-2 border-border/50 px-6"
+                          placeholder="••••••"
+                          {...field}
+                        />
+                      </FormControl>
+                    </FormItem>
+                  )}
+                />
+              </div>
+              <Button
+                type="submit"
+                className="w-full h-14 mt-4 rounded-full bg-foreground text-background hover:bg-foreground/90 font-black uppercase tracking-widest text-[11px] shadow-xl"
+              >
+                Register Membership
               </Button>
-            </CardFooter>
-          </form>
-        </Form>
-      </CardContent>
-    </Card>
+            </form>
+          </Form>
+        </CardContent>
+      </Card>
+
+      <div className="text-center">
+        <Link
+          href="/login"
+          className="text-[10px] font-black uppercase tracking-widest text-muted-foreground hover:text-primary transition-colors"
+        >
+          Already a member? Sign in →
+        </Link>
+      </div>
+    </div>
   );
 };

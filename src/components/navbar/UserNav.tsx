@@ -6,14 +6,13 @@ import { Button } from "@/components/ui/button";
 import {
   DropdownMenu,
   DropdownMenuContent,
-  DropdownMenuGroup,
   DropdownMenuItem,
   DropdownMenuLabel,
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { signOut } from "@/lib/auth";
-import { LogOut, Settings, User } from "lucide-react";
+import { LogOut } from "lucide-react";
 
 interface UserNavProps {
   user: UserResponse;
@@ -59,7 +58,7 @@ export function UserNav({ user }: UserNavProps) {
 
         <DropdownMenuSeparator className="opacity-50 mb-2" />
 
-        <DropdownMenuGroup className="space-y-1">
+        {/* <DropdownMenuGroup className="space-y-1">
           <DropdownMenuItem className="rounded-xl px-4 py-2.5 text-[10px] font-black uppercase tracking-widest cursor-pointer transition-colors focus:bg-accent focus:text-foreground">
             <User className="mr-3 h-3.5 w-3.5 text-muted-foreground" />
             Profile
@@ -68,7 +67,7 @@ export function UserNav({ user }: UserNavProps) {
             <Settings className="mr-3 h-3.5 w-3.5 text-muted-foreground" />
             Settings
           </DropdownMenuItem>
-        </DropdownMenuGroup>
+        </DropdownMenuGroup> */}
 
         <DropdownMenuSeparator className="opacity-50 my-2" />
 
