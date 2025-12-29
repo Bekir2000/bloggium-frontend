@@ -24,12 +24,18 @@ if (!API_URL) {
 
 export async function signUp(
   email: string,
-  password: string
+  password: string,
+  firstName: string,
+  lastName: string,
+  profileImageUrl?: string
 ): Promise<boolean> {
   try {
     await register({
+      firstName,
+      lastName,
       email,
       password,
+      profileImageUrl,
     });
 
     return true;

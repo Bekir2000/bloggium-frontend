@@ -1,5 +1,5 @@
 "use client";
-import { RegisterRequest } from "@/api/generated/model";
+
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import {
@@ -11,108 +11,139 @@ import {
   FormMessage,
 } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
+import { signIn, signUp } from "@/lib/auth"; // ✅ Added signIn import
 import { zodResolver } from "@hookform/resolvers/zod";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import * as React from "react";
 import { useForm } from "react-hook-form";
+import { toast } from "sonner";
 import { z } from "zod";
 
 const registerSchema = z
   .object({
     name: z.string().min(2, "Name must be at least 2 characters"),
-    email: z.email("Invalid email address"),
+    email: z.string().email("Invalid email address"),
     password: z.string().min(6, "Password must be at least 6 characters"),
-    confirmPassword: z.string(),
+    confirmPassword: z.string().min(1, "Please confirm your password"),
   })
   .refine((data) => data.password === data.confirmPassword, {
     message: "Passwords don't match",
     path: ["confirmPassword"],
-  }) satisfies z.ZodType<RegisterRequest>;
+  });
 
 type RegisterFormValues = z.infer<typeof registerSchema>;
 
 export const RegisterForm: React.FC = () => {
+  const router = useRouter();
   const form = useForm<RegisterFormValues>({
     resolver: zodResolver(registerSchema),
-    defaultValues: {
-      name: "",
-      email: "",
-      password: "",
-      confirmPassword: "",
-    },
+    defaultValues: { name: "", email: "", password: "", confirmPassword: "" },
   });
 
-  const onSubmit = (values: RegisterFormValues) => {
-    console.log(values);
+  const isSubmitting = form.formState.isSubmitting;
+
+  const onSubmit = async (values: RegisterFormValues) => {
+    try {
+      // 1. Create the account
+      const isSignedUp = await signUp(
+        values.email,
+        values.password,
+        values.name.split(" ")[0],
+        values.name.split(" ")[1] || ""
+      );
+
+      if (isSignedUp) {
+        // 2. ✅ AUTO-LOGIN: This is what creates the session
+        await signIn(values.email, values.password);
+
+        toast.success("Welcome aboard!", {
+          description: "Your membership has been created successfully.",
+        });
+
+        // 3. Redirect and Refresh to update Navbar
+        router.push("/");
+        router.refresh();
+      } else {
+        toast.error("Registration Failed", {
+          description: "This email might already be in use.",
+        });
+      }
+    } catch (error) {
+      toast.error("An unexpected error occurred.");
+    }
   };
 
   return (
     <div className="space-y-6">
       <Card className="border-none shadow-[0_24px_48px_-12px_rgba(0,0,0,0.08)] rounded-[2.5rem] p-4 bg-gray-50/50 dark:bg-zinc-900/50">
         <CardHeader className="pb-8 pt-6">
-          <CardTitle className="text-[10px] font-black uppercase tracking-[0.2em] text-primary">
+          <CardTitle className="text-[10px] font-black uppercase tracking-[0.2em] text-foreground/50">
             Account Registration
           </CardTitle>
         </CardHeader>
         <CardContent>
           <Form {...form}>
-            <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
+            <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-2">
               <FormField
                 control={form.control}
                 name="name"
                 render={({ field }) => (
-                  <FormItem>
+                  <FormItem className="relative pb-7">
                     <FormLabel className="text-[10px] font-black uppercase tracking-widest text-foreground/70 ml-1">
                       Full Name
                     </FormLabel>
                     <FormControl>
                       <Input
-                        className="h-14 rounded-2xl border-2 border-border/50 px-6"
+                        className="h-14 rounded-2xl border-2 border-border/50 bg-background px-6 transition-all focus:border-primary focus:ring-4 focus:ring-primary/5"
                         placeholder="Jacob Kovacek"
                         {...field}
                       />
                     </FormControl>
-                    <FormMessage className="text-[10px] font-bold uppercase" />
+                    <FormMessage className="absolute bottom-1 left-1 text-[9px] font-black uppercase tracking-widest text-red-500" />
                   </FormItem>
                 )}
               />
+
               <FormField
                 control={form.control}
                 name="email"
                 render={({ field }) => (
-                  <FormItem>
+                  <FormItem className="relative pb-7">
                     <FormLabel className="text-[10px] font-black uppercase tracking-widest text-foreground/70 ml-1">
                       Email
                     </FormLabel>
                     <FormControl>
                       <Input
                         type="email"
-                        className="h-14 rounded-2xl border-2 border-border/50 px-6"
+                        className="h-14 rounded-2xl border-2 border-border/50 bg-background px-6 transition-all focus:border-primary focus:ring-4 focus:ring-primary/5"
                         placeholder="you@example.com"
                         {...field}
                       />
                     </FormControl>
-                    <FormMessage className="text-[10px] font-bold uppercase" />
+                    <FormMessage className="absolute bottom-1 left-1 text-[9px] font-black uppercase tracking-widest text-red-500" />
                   </FormItem>
                 )}
               />
-              <div className="grid grid-cols-2 gap-4">
+
+              <div className="grid grid-cols-2 gap-4 items-start">
                 <FormField
                   control={form.control}
                   name="password"
                   render={({ field }) => (
-                    <FormItem>
+                    <FormItem className="relative pb-7">
                       <FormLabel className="text-[10px] font-black uppercase tracking-widest text-foreground/70 ml-1">
                         Password
                       </FormLabel>
                       <FormControl>
                         <Input
                           type="password"
-                          className="h-14 rounded-2xl border-2 border-border/50 px-6"
+                          className="h-14 rounded-2xl border-2 border-border/50 bg-background px-6 transition-all focus:border-primary focus:ring-4 focus:ring-primary/5"
                           placeholder="••••••"
                           {...field}
                         />
                       </FormControl>
+                      <FormMessage className="absolute bottom-1 left-1 text-[8px] font-black uppercase tracking-tighter text-red-500 leading-none" />
                     </FormItem>
                   )}
                 />
@@ -120,37 +151,39 @@ export const RegisterForm: React.FC = () => {
                   control={form.control}
                   name="confirmPassword"
                   render={({ field }) => (
-                    <FormItem>
+                    <FormItem className="relative pb-7">
                       <FormLabel className="text-[10px] font-black uppercase tracking-widest text-foreground/70 ml-1">
                         Confirm
                       </FormLabel>
                       <FormControl>
                         <Input
                           type="password"
-                          className="h-14 rounded-2xl border-2 border-border/50 px-6"
+                          className="h-14 rounded-2xl border-2 border-border/50 bg-background px-6 transition-all focus:border-primary focus:ring-4 focus:ring-primary/5"
                           placeholder="••••••"
                           {...field}
                         />
                       </FormControl>
+                      <FormMessage className="absolute bottom-1 left-1 text-[8px] font-black uppercase tracking-tighter text-red-500 leading-none" />
                     </FormItem>
                   )}
                 />
               </div>
+
               <Button
                 type="submit"
-                className="w-full h-14 mt-4 rounded-full bg-foreground text-background hover:bg-foreground/90 font-black uppercase tracking-widest text-[11px] shadow-xl"
+                disabled={isSubmitting}
+                className="w-full h-14 mt-4 rounded-full bg-foreground text-background hover:bg-foreground/90 font-black uppercase tracking-widest text-[11px] shadow-xl transition-all active:scale-[0.98]"
               >
-                Register Membership
+                {isSubmitting ? "Creating..." : "Register Membership"}
               </Button>
             </form>
           </Form>
         </CardContent>
       </Card>
-
       <div className="text-center">
         <Link
           href="/login"
-          className="text-[10px] font-black uppercase tracking-widest text-muted-foreground hover:text-primary transition-colors"
+          className="text-[10px] font-black uppercase tracking-widest text-muted-foreground hover:text-foreground transition-colors"
         >
           Already a member? Sign in →
         </Link>
