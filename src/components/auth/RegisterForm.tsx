@@ -11,7 +11,7 @@ import {
   FormMessage,
 } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
-import { signIn, signUp } from "@/lib/auth"; // ✅ Added signIn import
+import { signIn, signUp } from "@/lib/auth";
 import { zodResolver } from "@hookform/resolvers/zod";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
@@ -43,9 +43,9 @@ export const RegisterForm: React.FC = () => {
 
   const isSubmitting = form.formState.isSubmitting;
 
+  // Inside onSubmit in RegisterForm.tsx
   const onSubmit = async (values: RegisterFormValues) => {
     try {
-      // 1. Create the account
       const isSignedUp = await signUp(
         values.email,
         values.password,
@@ -54,23 +54,20 @@ export const RegisterForm: React.FC = () => {
       );
 
       if (isSignedUp) {
-        // 2. ✅ AUTO-LOGIN: This is what creates the session
         await signIn(values.email, values.password);
-
-        toast.success("Welcome aboard!", {
-          description: "Your membership has been created successfully.",
-        });
-
-        // 3. Redirect and Refresh to update Navbar
+        toast.success("Welcome aboard!");
         router.push("/");
         router.refresh();
-      } else {
-        toast.error("Registration Failed", {
-          description: "This email might already be in use.",
-        });
       }
-    } catch (error) {
-      toast.error("An unexpected error occurred.");
+    } catch (error: any) {
+      // Check if it's our custom ApiError with a detail message
+      const errorMessage = error?.message || "Application failed to respond";
+
+      console.error("Registration Details:", error);
+
+      toast.error("Registration Failed", {
+        description: errorMessage, // This will now show the actual API detail
+      });
     }
   };
 
