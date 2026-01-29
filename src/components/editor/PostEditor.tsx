@@ -155,7 +155,7 @@ export const PostEditor: React.FC<{ draftToEdit?: DraftDetailResponse }> = ({
         },
       },
     ],
-    [title, imageUrl, category, content]
+    [title, imageUrl, category, content],
   );
 
   const progressCount = checklist.filter((c) => c.met).length;
@@ -206,6 +206,7 @@ export const PostEditor: React.FC<{ draftToEdit?: DraftDetailResponse }> = ({
         });
       }
       if (!silent) toast.success("Draft saved");
+      router.push(`/me/stories`);
       return { postId: cPostId, draftId: cDraftId };
     } catch (error) {
       toast.error("Save failed");
@@ -292,7 +293,7 @@ export const PostEditor: React.FC<{ draftToEdit?: DraftDetailResponse }> = ({
                       "transition-all duration-500 rounded-full px-6",
                       isReady
                         ? "bg-green-600 hover:bg-green-700 shadow-lg text-white"
-                        : "bg-primary/5 text-primary hover:bg-primary/10"
+                        : "bg-primary/5 text-primary hover:bg-primary/10",
                     )}
                   >
                     {isPublishing ? (
@@ -336,7 +337,7 @@ export const PostEditor: React.FC<{ draftToEdit?: DraftDetailResponse }> = ({
                                 "text-xs font-medium",
                                 item.met
                                   ? "text-muted-foreground line-through"
-                                  : "text-foreground"
+                                  : "text-foreground",
                               )}
                             >
                               {item.label}
@@ -372,7 +373,7 @@ export const PostEditor: React.FC<{ draftToEdit?: DraftDetailResponse }> = ({
           className={cn(
             "group relative mb-12 transition-all duration-700",
             activeNudge === "imageUrl" &&
-              "scale-[1.02] ring-4 ring-primary/20 rounded-3xl"
+              "scale-[1.02] ring-4 ring-primary/20 rounded-3xl",
           )}
         >
           {!imageUrl ? (
@@ -382,13 +383,13 @@ export const PostEditor: React.FC<{ draftToEdit?: DraftDetailResponse }> = ({
                 "h-64 w-full rounded-[2.5rem] border-2 border-dashed flex flex-col items-center justify-center gap-4 cursor-pointer hover:bg-accent/50 transition-all duration-300",
                 (triedToPublish || activeNudge === "imageUrl") &&
                   !imageUrl &&
-                  "border-red-500 bg-red-50/10"
+                  "border-red-500 bg-red-50/10",
               )}
             >
               <ImagePlus
                 className={cn(
                   "h-8 w-8 text-muted-foreground",
-                  activeNudge === "imageUrl" && "animate-bounce text-primary"
+                  activeNudge === "imageUrl" && "animate-bounce text-primary",
                 )}
               />
               <p className="text-sm font-medium text-muted-foreground">
@@ -434,7 +435,7 @@ export const PostEditor: React.FC<{ draftToEdit?: DraftDetailResponse }> = ({
               "w-full resize-none bg-transparent text-5xl font-black tracking-tighter focus:outline-none placeholder:text-muted-foreground/20 transition-colors",
               (triedToPublish || activeNudge === "title") &&
                 title.length < 5 &&
-                "text-red-500"
+                "text-red-500",
             )}
             rows={1}
             value={title}
@@ -459,7 +460,7 @@ export const PostEditor: React.FC<{ draftToEdit?: DraftDetailResponse }> = ({
             placeholder="Once upon a time..."
             className={cn(
               "w-full resize-none bg-transparent text-xl leading-relaxed focus:outline-none min-h-[50vh] placeholder:text-muted-foreground/20 font-serif",
-              activeNudge === "content" && "bg-primary/5 rounded-xl p-4 -ml-4"
+              activeNudge === "content" && "bg-primary/5 rounded-xl p-4 -ml-4",
             )}
             value={content}
             onChange={(e) => setContent(e.target.value)}
@@ -482,7 +483,7 @@ export const PostEditor: React.FC<{ draftToEdit?: DraftDetailResponse }> = ({
           <div
             className={cn(
               "fixed bottom-8 left-1/2 -translate-x-1/2 w-[95%] max-w-2xl bg-background border rounded-[3rem] p-10 shadow-[0_32px_64px_-12px_rgba(0,0,0,0.2)] z-[70] animate-in slide-in-from-bottom-10 transition-all duration-500",
-              activeNudge === "category" && "ring-4 ring-primary"
+              activeNudge === "category" && "ring-4 ring-primary",
             )}
           >
             <div className="flex items-center justify-between mb-8">
@@ -519,12 +520,13 @@ export const PostEditor: React.FC<{ draftToEdit?: DraftDetailResponse }> = ({
                       "h-16 rounded-[1.25rem] border-2 transition-all",
                       (triedToPublish || activeNudge === "category") &&
                         !category &&
-                        "border-red-500 bg-red-50/5"
+                        "border-red-500 bg-red-50/5",
                     )}
                   >
                     <SelectValue placeholder="What's the topic?" />
                   </SelectTrigger>
-                  <SelectContent className="rounded-2xl">
+                  <SelectContent className="z-[100] rounded-2xl">
+                    {/* Adding z-[100] here forces the dropdown to sit on top of your fixed drawer */}
                     {CATEGORIES.map((cat) => (
                       <SelectItem key={cat} value={cat}>
                         {cat}
