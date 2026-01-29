@@ -33,6 +33,7 @@ import {
 } from "@/components/ui/tooltip";
 
 import {
+  getGetDraftByIdQueryKey,
   useCreateFirstDraft,
   usePublishPost,
   useSafeDraft,
@@ -207,6 +208,10 @@ export const PostEditor: React.FC<{ draftToEdit?: DraftDetailResponse }> = ({
       }
       if (!silent) toast.success("Draft saved");
       router.push(`/me/stories`);
+      await queryClient.invalidateQueries({
+        // This generates the correct key automatically:
+        queryKey: getGetDraftByIdQueryKey(postId, draftId),
+      });
       return { postId: cPostId, draftId: cDraftId };
     } catch (error) {
       toast.error("Save failed");
