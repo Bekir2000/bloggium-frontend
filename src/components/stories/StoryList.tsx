@@ -71,7 +71,7 @@ export function StoryList({ initialPosts, queryResult, type }: StoryListProps) {
       onSuccess: (response) => {
         toast.success("Revision created");
         router.push(
-          `/posts/${response.data.postId}/drafts/${response.data.draftId}/edit`
+          `/posts/${response.data.postId}/drafts/${response.data.draftId}/edit`,
         );
       },
       onError: () => toast.error("Could not create revision draft"),
@@ -83,7 +83,7 @@ export function StoryList({ initialPosts, queryResult, type }: StoryListProps) {
   const handleDelete = (post: PostCardResponse | DraftCardResponse) => {
     if (
       !confirm(
-        "Are you sure you want to delete this? This action is permanent."
+        "Are you sure you want to delete this? This action is permanent.",
       )
     )
       return;
@@ -100,11 +100,20 @@ export function StoryList({ initialPosts, queryResult, type }: StoryListProps) {
     }
   };
 
-  const handleEdit = (post: PostCardResponse) => {
+  // 1. Define the Union Type
+  type EditItem = DraftCardResponse | PostCardResponse;
+
+  const handleEdit = (item: EditItem) => {
     if (type === "DRAFT") {
-      const parentId = post.id!;
-      router.push(`/posts/${parentId}/drafts/${post.id}/edit`);
+      // 2. Cast to DraftCardResponse
+      const draft = item as DraftCardResponse;
+      const postId = draft.postId;
+      const draftId = draft.id;
+
+      router.push(`/posts/${postId}/drafts/${draftId}/edit`);
     } else {
+      // 3. Cast to PostCardResponse
+      const post = item as PostCardResponse;
       addDraft({ postId: post.id! });
     }
   };
@@ -154,7 +163,9 @@ export function StoryList({ initialPosts, queryResult, type }: StoryListProps) {
     <div className="space-y-12 pb-24">
       {allPosts.map((post) => {
         const displayDate =
-          type === "DRAFT" ? post.updatedAt ?? post.createdAt : post.createdAt;
+          type === "DRAFT"
+            ? (post.updatedAt ?? post.createdAt)
+            : post.createdAt;
 
         return (
           <div
